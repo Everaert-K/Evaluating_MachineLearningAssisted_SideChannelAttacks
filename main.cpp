@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <cstdio>
 #include <iostream>
 #include <fstream>
@@ -7,9 +8,40 @@
 
 using namespace std;
 
+/*
+    When compiling force loop enrolling
+    Otherwise the for for the measurements loops will include other instructions as well
+
+    Use this command to get an assembly file of the program:
+        g++ main.cpp -fanalyzer -Wall -Wextra -S -O3 
+
+    Run as root
+*/
+
+long get_energy_counter();
+
+void measure_energy_of_mv(long* measurements, size_t number_of_measurements);
+void measure_energy_of_fscale();
+void measure_energy_of_xor(long* measurements, size_t number_of_measurements);
+void measure_energy_of_inc(long* measurements, size_t number_of_measurements);
+void measure_energy_of_rdrand(long* measurements, size_t number_of_measurements);
+void measure_energy_of_nop(long* measurements, size_t number_of_measurements);
+
+void write_array_to_file(string& filename, long* measurements, size_t number_of_measurements);
+
+int main() {
+
+    long measurements[10000];
+    measure_energy_of_nop(measurements,10000);
+    string filename = "nop.csv";
+    write_array_to_file(filename,measurements,10000);
+
+	return 0;
+}
+
 long get_energy_counter() {
     // "Returns the current energy counter in micro joules"
-    fstream my_file;
+    std::fstream my_file;
 	my_file.open("/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/energy_uj", ios::in);
     if(my_file.is_open()) {
         string line;
@@ -18,37 +50,20 @@ long get_energy_counter() {
         long value = stol(line);
         return value;
     }
-    return 0;
-}
-
-/////////////////////////////////////////////////////////////
-vector<long> measure_energy_of_nop() {
-    int number_of_measurements = 10000;
-    vector<long> measurements(number_of_measurements);
-    for(int i=0;i<number_of_measurements;i++) {
-        for(int j=0;j<100;j++) {
-            __asm__ ("nop;");
-        }
-        long start = get_energy_counter();
-        for(int z=0;z<1000;z++) {
-            __asm__("nop;");
-        }
-        long end = get_energy_counter();
-        cout<<(int)(end-start)/1000<<endl;
-        measurements.push_back((int)(end-start)/1000);
+    else {
+        cout<<"Run as root, can't open the file"<<endl;
+        return 0;
     }
-    sort(measurements.begin(), measurements.end()); 
-
-    return measurements;
 }
-////////////////////////////////////////////////////////////////
 
-vector<long> measure_energy_of_mv() {
+void measure_energy_of_mv(long* measurements, size_t number_of_measurements) {
     // return in picojoule
-    int number_of_measurements = 10000;
-    vector<long> measurements(number_of_measurements);
-    for(int i=0;i<number_of_measurements;i++) {
+    for(size_t i=0;i<number_of_measurements;i++) {
         for(int j=0;j<100;j++) {
+            /* 
+            Goal of this for loop is to clean the pipeline of any other instructions 
+            and get better measurements
+            */
             __asm__ ("movl $20, %eax;");
         }
         long start = get_energy_counter();
@@ -57,18 +72,18 @@ vector<long> measure_energy_of_mv() {
         }
         long end = get_energy_counter();
         long difference = end-start;
-        measurements.push_back(difference);
+        measurements[i] = difference;
     }
-    // sort(measurements.begin(), measurements.end()); 
-    return measurements;
 }
 
-vector<long> measure_energy_of_fscale() {
+void measure_energy_of_fscale(long* measurements, size_t number_of_measurements) {
     // return in picojoule
-    int number_of_measurements = 10000;
-    vector<long> measurements(number_of_measurements);
-    for(int i=0;i<number_of_measurements;i++) {
+    for(size_t i=0;i<number_of_measurements;i++) {
         for(int j=0;j<100;j++) {
+            /* 
+            Goal of this for loop is to clean the pipeline of any other instructions 
+            and get better measurements
+            */
             __asm__ ("fscale;");
         }
         long start = get_energy_counter();
@@ -77,10 +92,88 @@ vector<long> measure_energy_of_fscale() {
         }
         long end = get_energy_counter();
         long difference = end-start;
-        measurements.push_back(difference);
+        measurements[i] = difference;
     }
-    // sort(measurements.begin(), measurements.end()); 
-    return measurements;
+}
+
+void measure_energy_of_xor(long* measurements, size_t number_of_measurements) {
+    // return in picojoule
+    for(size_t i=0;i<number_of_measurements;i++) {
+        for(int j=0;j<100;j++) {
+            /* 
+            Goal of this for loop is to clean the pipeline of any other instructions 
+            and get better measurements
+            */
+            __asm__ ("xor %eax, %eax;");
+        }
+        long start = get_energy_counter();
+        for(int z=0;z<1000000;z++) {
+            __asm__("xor %eax, %eax;");
+        }
+        long end = get_energy_counter();
+        long difference = end-start;
+        measurements[i] = difference;
+    }
+}
+
+void measure_energy_of_inc(long* measurements, size_t number_of_measurements) {
+    // return in picojoule
+    for(size_t i=0;i<number_of_measurements;i++) {
+        for(int j=0;j<100;j++) {
+            /* 
+            Goal of this for loop is to clean the pipeline of any other instructions 
+            and get better measurements
+            */
+            __asm__ ("inc %eax;");
+        }
+        long start = get_energy_counter();
+        for(int z=0;z<1000000;z++) {
+            __asm__("inc %eax;");
+        }
+        long end = get_energy_counter();
+        long difference = end-start;
+        measurements[i] = difference;
+    }
+}
+
+void measure_energy_of_rdrand(long* measurements, size_t number_of_measurements) {
+    // return in picojoule
+    for(size_t i=0;i<number_of_measurements;i++) {
+        for(int j=0;j<100;j++) {
+            /* 
+            Goal of this for loop is to clean the pipeline of any other instructions 
+            and get better measurements
+            */
+            __asm__ ("rdrand %eax;");
+        }
+        long start = get_energy_counter();
+        for(int z=0;z<1000000;z++) {
+            __asm__("rdrand %eax;");
+        }
+        long end = get_energy_counter();
+        long difference = end-start;
+        measurements[i] = difference;
+    }
+}
+
+void measure_energy_of_nop(long* measurements, size_t number_of_measurements) {
+    // return in picojoule
+    for(size_t i=0;i<number_of_measurements;i++) {
+        for(int j=0;j<100;j++) {
+            /* 
+            Goal of this for loop is to clean the pipeline of any other instructions 
+            and get better measurements
+            */
+            __asm__ ("nop;");
+        }
+        long start = get_energy_counter();
+        for(int z=0;z<1000000;z++) {
+            __asm__("nop;");
+        }
+        long end = get_energy_counter();
+        long difference = end-start;
+        measurements[i] = difference;
+    }
 }
 
 /*
@@ -100,31 +193,17 @@ int get_energy_of_instruction(string& instruction) {
 }
 */
 
-void write_vector_to_file(string& filename, vector<long> measurements) {
-    fstream file_out;
 
+void write_array_to_file(string& filename, long* measurements, size_t number_of_measurements) {
+    fstream file_out;
     file_out.open(filename, std::ios_base::app);
     if (!file_out.is_open()) {
         cout << "failed to open " << filename << '\n';
     } else {
         file_out<<"Measurements"<<endl;
-        for(int i=0;i<measurements.size();i++) {
-            file_out<<measurements.at(i)<<endl;
+        for(size_t i=0;i<number_of_measurements;i++) {
+            file_out<<measurements[i]<<endl;
         }
         file_out.close();
     }
-}
-
-int main() {
-
-    // vector<long> mov = measure_energy_of_mv();
-    // string filename = "mov.csv";
-    // write_vector_to_file(filename,mov);
-
-    vector<long> fscale = measure_energy_of_fscale();
-    string filename = "fscale.csv";
-    write_vector_to_file(filename,fscale);
-
-
-	return 0;
 }

@@ -1,6 +1,6 @@
-ASM_SOURCES := instruction_nop_100.s
-C_SOURCES := main.cpp
-NAME := get_a_better_keyboard
+ASM_SOURCES := src/instruction_nop_100.s
+C_SOURCES := src/main.cpp
+NAME := energy
 CC := g++
 
 # Verify your binary by running

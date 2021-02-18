@@ -22,7 +22,7 @@ using namespace std;
 
 void write_array_to_file(string& filename, long* measurements, size_t number_of_measurements);
 
-extern void instruction_nop_100();
+extern "C" void instruction_nop_100();
 int main() {
 
 

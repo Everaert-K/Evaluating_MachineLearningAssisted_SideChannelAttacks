@@ -1,4 +1,5 @@
-ASM_SOURCES := src/instruction_nop_100.s
+# ASM_SOURCES := src/instruction_nop_100.s
+ASM_SOURCES := src/*.s
 C_SOURCES := src/main.cpp
 NAME := energy
 CC := g++

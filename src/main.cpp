@@ -23,10 +23,20 @@ using namespace std;
 void write_array_to_file(string& filename, long* measurements, size_t number_of_measurements);
 
 extern "C" void instruction_nop_100();
+extern "C" void instruction_nop_1000000();
+
 int main() {
 
-
+    cout<<"start main"<<endl;
     instruction_nop_100();
+    long start = get_energy_counter();
+    instruction_nop_1000000();
+    instruction_nop_1000000();
+    cout<<"test"<<endl;
+    sleep(5);
+    long end = get_energy_counter();
+
+    cout<<start<<" => "<<end<<":"<<end-start<<endl;
 
 	return 0;
 }

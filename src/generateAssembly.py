@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-instruction = "xor %eax, %eax;"
+instruction = "rdrand %eax;"
 amount = 1000000
 
 filename = "instruction_"+instruction.split(' ')[0]+"_"+str(amount)+".s"

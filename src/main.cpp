@@ -8,6 +8,8 @@
 #include <iostream>
 #include <fstream>
 
+#include <climits>
+
 #include "rapl-powercap.h"
 #include "aes.h"
 // #include "measure-no-unrolling.h"
@@ -42,26 +44,71 @@ void write_array_to_file(string& filename, long* measurements, size_t number_of_
 // extern "C" void instruction_rdrand_100();
 // extern "C" void instruction_rdrand_1000000();
 
-void measure_energy_AES_with_key(const string& key) {
+// 1 int consists out of 32 bits
+std::string int_to_hex(const int* integers) {
+  std::stringstream stream;
+  for(int i=0;i<4;i++) {
+    stream << std::setfill ('0') << std::setw(sizeof(int)*2) 
+        << std::hex << integers[i];
+  }
+  return stream.str();
+}
+
+void generate_keys(const int amount_of_keys, const string& output_filename) {
+    // let's just generate 10 different keys for now
     ofstream myfile;
-    myfile.open ("AES_info.csv", std::ios_base::app);
-    const auto start = std::chrono::system_clock::now();
+    myfile.open (output_filename, std::ofstream::out | std::ios_base::app);
+
+    for(int i=0;i<amount_of_keys;i++) {
+        int* integers = new int[4];
+        for(int j=0;j<4;j++) {
+            integers[j] = rand();
+        }
+        string hex = int_to_hex(integers);
+        delete []integers;
+        std::stringstream ss;
+        ss << hex[0]<<hex[1];
+        for (int i = 2; i < hex.size(); i+=2) {
+            ss << ' ' << s[i] << s[i+1];
+        }
+        myfile<<ss.str()<<endl;
+    }
+    myfile.close();
+}
+
+void measure_energy_AES_with_key(const string& key, const string& output_filename) {
+    ofstream myfile;
+    myfile.open (output_filename, std::ofstream::out | std::ios_base::app);
+    auto start = std::chrono::high_resolution_clock::now();
     for(int i=0;i<160;i++) { // has to be 16M??
         AES_encryption(key);
     }
-    const auto stop = std::chrono::system_clock::now();
+    auto stop = std::chrono::high_resolution_clock::now();
     myfile<<key<<";"
-        <<std::chrono::duration_cast<std::chrono::seconds>(start.time_since_epoch()).count()<<";"
-        <<std::chrono::duration_cast<std::chrono::seconds>(stop.time_since_epoch()).count()<<endl;     
+        <<std::chrono::duration_cast<std::chrono::microseconds>(start.time_since_epoch()).count()<<";"
+        <<std::chrono::duration_cast<std::chrono::microseconds>(stop.time_since_epoch()).count()<<endl;     
+}
+
+void analyse_AES(const string& key_file, const string& output_filename) {
+    //somehow get a bunch of keys
+    // run over all this keys
+    // ! write header to the csv file !!
 }
 
 int main() {
+    /*
     const string key1 = "01 04 02 03 01 03 04 0A 09 0B 07 0F 0F 06 03 00";
     const string key2 = "01 04 02 07 A1 03 04 8A 09 0B 07 0F 0F 06 03 10";
     // AES_encryption(key);
     measure_energy_AES_with_key(key1);
     measure_energy_AES_with_key(key2);
-	return 0;
+    */
+
+    // there are 32 bits in an integer
+    const string keys = "keys";
+    generate_keys(10, keys);
+
+    return 0;
 }
 
 void write_array_to_file(string& filename, long* measurements, size_t number_of_measurements) {

@@ -365,6 +365,8 @@ void AESEncrypt(unsigned char * message, unsigned char * expandedKey, unsigned c
 	}
 
 	int numberOfRounds = 9;
+    // let's just attack the firt round here
+    // int numberOfRounds = 1;
 
 	AddRoundKey(state, expandedKey); // Initial round
 
@@ -378,6 +380,55 @@ void AESEncrypt(unsigned char * message, unsigned char * expandedKey, unsigned c
 	for (int i = 0; i < 16; i++) {
 		encryptedMessage[i] = state[i];
 	}
+}
+
+void AES_encryption(const string& key_string) {
+    // performs AES encryption on the string "Message1"
+    // using the key provided in the arguments
+
+    char message[1024] = "Message1";
+    int originalLen = strlen((const char *)message);
+	int paddedMessageLen = originalLen;
+	if ((paddedMessageLen % 16) != 0) {
+		paddedMessageLen = (paddedMessageLen / 16 + 1) * 16;
+	}
+	unsigned char * paddedMessage = new unsigned char[paddedMessageLen];
+	for (int i = 0; i < paddedMessageLen; i++) {
+		if (i >= originalLen) {
+			paddedMessage[i] = 0;
+		}
+		else {
+			paddedMessage[i] = message[i];
+		}
+	}
+	unsigned char * encryptedMessage = new unsigned char[paddedMessageLen];
+
+    // string str="01 04 02 03 01 03 04 0A 09 0B 07 0F 0F 06 03 00";
+    string str = key_string;
+    istringstream hex_chars_stream(str);
+	unsigned char key[16];
+	int i = 0;
+	unsigned int c;
+	while (hex_chars_stream >> hex >> c)
+	{
+		key[i] = c;
+		i++;
+	}
+
+	unsigned char expandedKey[176];
+	KeyExpansion(key, expandedKey);
+    for (int i = 0; i < paddedMessageLen; i += 16) {
+		AESEncrypt(paddedMessage+i, expandedKey, encryptedMessage+i);
+	}
+    cout << "Encrypted message in hex:" << endl;
+	for (int i = 0; i < paddedMessageLen; i++) {
+		cout << hex << (int) encryptedMessage[i];
+		cout << " ";
+	}
+    cout << endl;
+
+    delete[] paddedMessage;
+	delete[] encryptedMessage;
 }
 
 

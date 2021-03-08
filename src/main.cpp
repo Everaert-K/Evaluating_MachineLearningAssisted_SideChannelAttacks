@@ -4,6 +4,9 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <chrono>
+#include <iostream>
+#include <fstream>
 
 #include "rapl-powercap.h"
 #include "aes.h"
@@ -39,20 +42,27 @@ void write_array_to_file(string& filename, long* measurements, size_t number_of_
 // extern "C" void instruction_rdrand_100();
 // extern "C" void instruction_rdrand_1000000();
 
-
-int main() {
-
-    char message[1024] = "testScenario";
-    
-	return 0;
+void measure_energy_AES_with_key(const string& key) {
+    ofstream myfile;
+    myfile.open ("AES_info.csv", std::ios_base::app);
+    const auto start = std::chrono::system_clock::now();
+    for(int i=0;i<160;i++) { // has to be 16M??
+        AES_encryption(key);
+    }
+    const auto stop = std::chrono::system_clock::now();
+    myfile<<key<<";"
+        <<std::chrono::duration_cast<std::chrono::seconds>(start.time_since_epoch()).count()<<";"
+        <<std::chrono::duration_cast<std::chrono::seconds>(stop.time_since_epoch()).count()<<endl;     
 }
 
-
-
-
-
-
-
+int main() {
+    const string key1 = "01 04 02 03 01 03 04 0A 09 0B 07 0F 0F 06 03 00";
+    const string key2 = "01 04 02 07 A1 03 04 8A 09 0B 07 0F 0F 06 03 10";
+    // AES_encryption(key);
+    measure_energy_AES_with_key(key1);
+    measure_energy_AES_with_key(key2);
+	return 0;
+}
 
 void write_array_to_file(string& filename, long* measurements, size_t number_of_measurements) {
     fstream file_out;

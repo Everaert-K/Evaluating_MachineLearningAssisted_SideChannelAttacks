@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #include "rapl-powercap.h"
+#include "aes.h"
 // #include "measure-no-unrolling.h"
 
 using namespace std;
@@ -25,47 +26,33 @@ using namespace std;
 void write_array_to_file(string& filename, long* measurements, size_t number_of_measurements);
 
 
-extern "C" void instruction_nop_100();
-extern "C" void instruction_nop_1000000();
-
+// extern "C" void instruction_nop_100();
+// extern "C" void instruction_nop_1000000();
 // extern "C" void instruction_xor_100();
 // extern "C" void instruction_xor_1000000();
-
 // extern "C" void instruction_fscale_100();
 // extern "C" void instruction_fscale_1000000();
-
 // extern "C" void instruction_inc_100();
 // extern "C" void instruction_inc_1000000();
-
 // extern "C" void instruction_movl_100();
 // extern "C" void instruction_movl_1000000();
-
 // extern "C" void instruction_rdrand_100();
 // extern "C" void instruction_rdrand_1000000();
 
 
 int main() {
 
-    system("/bin/bash -c ./disable_dynamic_freq_scaling.sh");
-
-    int number_of_measurements = 10000;
-    long measurements[number_of_measurements];
-    for(int i=0;i<number_of_measurements;i++) {
-        // filling up the pipeline
-        instruction_nop_100();
-        long start = get_energy_counter();
-        instruction_nop_1000000();
-        long stop = get_energy_counter();
-        measurements[i] = (stop-start);
-    }
-
-    string filename = "nop.csv";
-    write_array_to_file(filename, measurements, (size_t)number_of_measurements);
-
-    system("/bin/bash -c ./enable_dynamic_freq_scaling.sh");
-
+    char message[1024] = "testScenario";
+    
 	return 0;
 }
+
+
+
+
+
+
+
 
 void write_array_to_file(string& filename, long* measurements, size_t number_of_measurements) {
     fstream file_out;
@@ -84,7 +71,125 @@ void write_array_to_file(string& filename, long* measurements, size_t number_of_
 
 
 
+    /*
+    system("/bin/bash -c ./disable_dynamic_freq_scaling.sh");
 
+    int number_of_measurements = 10000;
+    long measurements[number_of_measurements];
+    for(int i=0;i<number_of_measurements;i++) {
+        // filling up the pipeline
+        instruction_movl_100();
+        long start = get_energy_counter();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        instruction_movl_1000000();
+        long stop = get_energy_counter();
+        measurements[i] = (stop-start);
+    }
+
+    string filename = "movl.csv";
+    write_array_to_file(filename, measurements, (size_t)number_of_measurements);
+
+    system("/bin/bash -c ./enable_dynamic_freq_scaling.sh");
+
+    */
 
 
 

@@ -69,14 +69,14 @@ void generate_keys(const int amount_of_keys, const string& output_filename) {
         std::stringstream ss;
         ss << hex[0]<<hex[1];
         for (int i = 2; i < hex.size(); i+=2) {
-            ss << ' ' << s[i] << s[i+1];
+            ss << ' ' << hex[i] << hex[i+1];
         }
         myfile<<ss.str()<<endl;
     }
     myfile.close();
 }
 
-void measure_energy_AES_with_key(const string& key, const string& output_filename) {
+void execute_AES_with_key(const string& key, int iteration, const string& output_filename) {
     ofstream myfile;
     myfile.open (output_filename, std::ofstream::out | std::ios_base::app);
     auto start = std::chrono::high_resolution_clock::now();
@@ -85,28 +85,37 @@ void measure_energy_AES_with_key(const string& key, const string& output_filenam
     }
     auto stop = std::chrono::high_resolution_clock::now();
     myfile<<key<<";"
+        <<iteration<<";"
         <<std::chrono::duration_cast<std::chrono::microseconds>(start.time_since_epoch()).count()<<";"
         <<std::chrono::duration_cast<std::chrono::microseconds>(stop.time_since_epoch()).count()<<endl;     
 }
 
 void analyse_AES(const string& key_file, const string& output_filename) {
-    //somehow get a bunch of keys
     // run over all this keys
-    // ! write header to the csv file !!
+    fstream keyfile;
+    keyfile.open("keys",ios::in); 
+
+    fstream outfile;
+    outfile.open(output_filename,ios::out);
+    outfile<<"key;invocation;timestamp_begin;timestamp_end"<<endl;
+    outfile.close();
+
+   if (keyfile.is_open()){   
+      string key;
+      while(getline(keyfile, key)){
+            int number_of_invocations = 10;
+            for(int i=0;i<number_of_invocations;i++) {
+                execute_AES_with_key(key,i,output_filename);
+            }
+      }
+      keyfile.close(); 
+   }
 }
 
 int main() {
-    /*
-    const string key1 = "01 04 02 03 01 03 04 0A 09 0B 07 0F 0F 06 03 00";
-    const string key2 = "01 04 02 07 A1 03 04 8A 09 0B 07 0F 0F 06 03 10";
-    // AES_encryption(key);
-    measure_energy_AES_with_key(key1);
-    measure_energy_AES_with_key(key2);
-    */
-
-    // there are 32 bits in an integer
-    const string keys = "keys";
-    generate_keys(10, keys);
+    const string keyfile = "keys";
+    const string outfile = "out";
+    analyse_AES(keyfile,outfile);
 
     return 0;
 }

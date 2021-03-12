@@ -7,8 +7,14 @@
 #include <cstring>
 #include <fstream>
 #include <sstream>
+#include <chrono>
 
 using namespace std;
+
+std::string int_to_hex(const int* integers);
+void generate_keys(const int amount_of_keys, const string& output_filename);
+void execute_AES_with_key(const string& key, int iteration, const string& output_filename);
+void analyse_AES(const string& key_file, const string& output_filename);
 
 unsigned char s[256] =
 {
@@ -432,7 +438,73 @@ void AES_encryption(const string& key_string) {
 }
 
 
+// 1 int consists out of 32 bits
+std::string int_to_hex(const int* integers) {
+  std::stringstream stream;
+  for(int i=0;i<4;i++) {
+    stream << std::setfill ('0') << std::setw(sizeof(int)*2) 
+        << std::hex << integers[i];
+  }
+  return stream.str();
+}
 
+void generate_keys(const int amount_of_keys, const string& output_filename) {
+    // let's just generate 10 different keys for now
+    ofstream myfile;
+    myfile.open (output_filename, std::ofstream::out | std::ios_base::app);
+
+    for(int i=0;i<amount_of_keys;i++) {
+        int* integers = new int[4];
+        for(int j=0;j<4;j++) {
+            integers[j] = rand();
+        }
+        string hex = int_to_hex(integers);
+        delete []integers;
+        std::stringstream ss;
+        ss << hex[0]<<hex[1];
+        for (int i = 2; i < hex.size(); i+=2) {
+            ss << ' ' << hex[i] << hex[i+1];
+        }
+        myfile<<ss.str()<<endl;
+    }
+    myfile.close();
+}
+
+void execute_AES_with_key(const string& key, int iteration, const string& output_filename) {
+    ofstream myfile;
+    myfile.open (output_filename, std::ofstream::out | std::ios_base::app);
+    auto start = std::chrono::high_resolution_clock::now();
+    for(int i=0;i<160;i++) { // has to be 16M??
+        AES_encryption(key);
+    }
+    auto stop = std::chrono::high_resolution_clock::now();
+    myfile<<key<<";"
+        <<iteration<<";"
+        <<std::chrono::duration_cast<std::chrono::microseconds>(start.time_since_epoch()).count()<<";"
+        <<std::chrono::duration_cast<std::chrono::microseconds>(stop.time_since_epoch()).count()<<endl;     
+}
+
+void analyse_AES(const string& key_file, const string& output_filename) {
+    // run over all this keys
+    fstream keyfile;
+    keyfile.open("keys",ios::in); 
+
+    fstream outfile;
+    outfile.open(output_filename,ios::out);
+    outfile<<"key;invocation;timestamp_begin;timestamp_end"<<endl;
+    outfile.close();
+
+   if (keyfile.is_open()){   
+      string key;
+      while(getline(keyfile, key)){
+            int number_of_invocations = 10;
+            for(int i=0;i<number_of_invocations;i++) {
+                execute_AES_with_key(key,i,output_filename);
+            }
+      }
+      keyfile.close(); 
+   }
+}
 
 
 

@@ -426,12 +426,14 @@ void AES_encryption(const string& key_string) {
     for (int i = 0; i < paddedMessageLen; i += 16) {
 		AESEncrypt(paddedMessage+i, expandedKey, encryptedMessage+i);
 	}
-    cout << "Encrypted message in hex:" << endl;
+    /*
+	cout << "Encrypted message in hex:" << endl;
 	for (int i = 0; i < paddedMessageLen; i++) {
 		cout << hex << (int) encryptedMessage[i];
 		cout << " ";
 	}
     cout << endl;
+	*/
 
     delete[] paddedMessage;
 	delete[] encryptedMessage;
@@ -474,7 +476,7 @@ void execute_AES_with_key(const string& key, int iteration, const string& output
     ofstream myfile;
     myfile.open (output_filename, std::ofstream::out | std::ios_base::app);
     auto start = std::chrono::high_resolution_clock::now();
-    for(int i=0;i<160;i++) { // has to be 16M??
+    for(int i=0;i<1600;i++) { // has to be 16M??
         AES_encryption(key);
     }
     auto stop = std::chrono::high_resolution_clock::now();
@@ -497,7 +499,7 @@ void analyse_AES(const string& key_file, const string& output_filename) {
    if (keyfile.is_open()){   
       string key;
       while(getline(keyfile, key)){
-            int number_of_invocations = 10;
+            int number_of_invocations = 160000; // 10??
             for(int i=0;i<number_of_invocations;i++) {
                 execute_AES_with_key(key,i,output_filename);
             }

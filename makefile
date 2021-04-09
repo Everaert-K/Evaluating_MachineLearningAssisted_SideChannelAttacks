@@ -1,5 +1,5 @@
 # ASM_SOURCES := src/instruction_nop_100.s
-ASM_SOURCES := src/assembly/*.s
+ASM_SOURCES := src/assembly/*_movl_*.s
 C_SOURCES := src/main.cpp
 NAME := energy
 CC := g++
@@ -9,7 +9,7 @@ CC := g++
 
 .PHONY: build
 $(NAME):
-	$(CC) $(C_SOURCES) $(ASM_SOURCES) -o $(NAME)
+	$(CC) -g $(C_SOURCES) $(ASM_SOURCES) -o $(NAME) -lpthread -pthread
 
 .PHONY: clean
 clean:
